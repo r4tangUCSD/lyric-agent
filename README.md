@@ -51,26 +51,30 @@ We randomly sampled 100,000 songs and tested models of n = [2, 3, 4, 5].
 
 Here are some sample lyrics generated:
 
-N = 2, input = ['hi']
+`n = 2, input = ['hi']`
 hi, i know that i know that i know that i know that i know that
 
 Here, we loop between "i know that," which is to be expected with a low n.
 
-N = 5, input = ['hi', ',', 'you', 'are']
+`n = 5, input = ['hi', ',', 'you', 'are']`
 hi, you are of the lord 2x my god has made his favour, to be manifested upon
 
 These lyrics are actually pretty coherent, and look like they come from a Christian song.
 
-N = 6, input = ['hi', ',', 'you', 'are', 'my']
+`n = 6, input = ['hi', ',', 'you', 'are', 'my']`
 hi, you are my, beautiful mess baby you are my beautiful, beautiful mess baby you are my
 
 These lyrics also start to repeat, but the lyrics at least form a coherent message.
 
 Then, we used sample lyrics from hit pop songs and calculated the negative log likelihood of each set of lyrics.
 
+Below is the results of our different n-gram models on the lyrics `['now', 'and', 'then', ',', 'i', 'think', 'of', 'all', 'the', 'times', 'you', 'screwed', 'me', 'over']` from Gotye's "Somebody That I Used To Know"
+![](gotye_results.png)
 
+Here are the results of our different n-gram models on a simpler test sequence `['i', 'wanna', 'dance', 'with', 'somebody']` from Whitney Houston's "I Wanna Dance With Somebody"
+![](whitney_houston_results.png)
 
-In general, we found that values of smaller n had the lowest log-likelihoods. Given our model, this makes sense, however this doesn't necessarily mean that lower n-grams are the best for our purpose of generating lyrics. Log-likelihood might not be the best metric for evaluating overfitting and underfitting, and we might need to experiment and research more complex methods, like perplexity.
+In general, we found that values of smaller n had the best log-likelihoods (closest to 0). In particular, it seems like our bigram model performed the best on those specific lyrics. As n increased, our log likelihood became further away from 0, indicating signs of overfitting since we were performing worse on the "test" data. Given our model, this makes sense, however this doesn't necessarily mean that lower n-grams are the best for our purpose of generating lyrics. Log-likelihood might not be the best metric for evaluating overfitting and underfitting, and we might need to experiment and research more complex methods, like perplexity. However, given the nature of n-gram, it is likely that we underfit on the lower values of n given that not much context is retained with lower values of n, however, as n gets larger, our model overfits since it is trained on relatively long specific sequences of words.
 
 ## Conclusion section
 The first model has a lot of pitfalls. The model frequently runs into cycles, probably because of the way songs are structured. Choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics.
