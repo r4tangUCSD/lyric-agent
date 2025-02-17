@@ -41,6 +41,45 @@ The cleaned datasets are way too big to upload into the repository, but we inclu
 
 Lyrics were tokenized by splitting the lyrics, including punctuation, and then trained. We applied laplace smooth to avoid 0 probability n-grams, which was necessary to get meaningful log-likliehoods in the next step.
 
+## Training
+To train our n-gram models, we made a `fit()` function for our `NGramModel` class. We first opted to have our model only be trained on a certain tag or genre since lyrics of a certain genre wouldn't make sense in another. Then, we generated our vocabulary by taking the most frequent words given a user-specified vocabulary size - less frequent words were replaced with `<UNK>` tokens. Following that, we calculated our n-gram counts using a sliding window method, utilizing a deque to keep track of our previous n-1 tokens. Our n-gram counts are stored in a 2-D dictionary with the primary key being the prior or n-1 previous tokens and the inner key being our nth word. 
+
+Below is how we populated our counts:
+```
+ngram = deque([self.START_TOKEN] * (self.n - 1))
+    for song in self.lyrics:
+      for word in song:
+        self.count[str(list(ngram))][word] += 1 # update count(word | previous n-1 words)
+        ngram.append(self.UNK_TOKEN if word not in self.vocab else word)
+        ngram.popleft()
+```
+
+## Evaluating
+To evaluate, we used log likelihood. Similar to in hw2, we would calculate the log likelihood by adding the log of all n-grams within our lyrics. If the n-gram probability was 0, we would add negative infinity.
+```
+ll = 0.0
+    ngram = deque([self.START_TOKEN] * (self.n - 1))
+    for word in sentence:
+      ngram.append(word)
+      ngram_prob = self.get_ngram_probability(ngram)
+      ll += -np.inf if ngram_prob == 0 else np.log(ngram_prob)
+      ngram.popleft()
+    return ll
+```
+To get our n-gram probabilities, we used the likelihood formulas from class, specifically, the probability of the n-gram (nth word given prior) divided by the sum of all possible nths words given our prior. Additionally, later during our implementation, to avoid zero probability n-grams, we utilized laplace smoothing. 
+
+```
+ def get_ngram_probability(self, ngram):
+    ngram = [self.UNK_TOKEN if token not in self.vocab else token for token in ngram]
+    prior = str(ngram[:-1]) # prior should be ngram except last token
+    prior_count = sum(self.count[prior][word] for word in self.count[prior].keys()) # count is in the form count[prior][nth word] -> get prior_counts by summing all count[prior][arbitrary word]
+    # probability of ngram should be count(nth word | prior words) / count(prior words)
+    return (self.count[prior][ngram[-1]] + 1) / (prior_count + len(self.vocab)) # apply laplace smoothing
+```
+
+As for evaluation, we fed specific test sequences to our n-gram models and calculated the log likelihood of those sequences. You will see the results below.
+
+
 ## Overfitting / Underfitting
 
 We think lower values of n will underfit and the higher values of n will overfit. Lower values of n won't be enough to capture all the patterns in our dataset of songs. Higher values will create good training data, but will perform bad on test data because unseen song lyrics will be viewed as unlikely even if they capture general patterns
@@ -77,6 +116,6 @@ Here are the results of our different n-gram models on a simpler test sequence `
 In general, we found that values of smaller n had the best log-likelihoods (closest to 0). In particular, it seems like our bigram model performed the best on those specific lyrics. As n increased, our log likelihood became further away from 0, indicating signs of overfitting since we were performing worse on the "test" data. Given our model, this makes sense, however this doesn't necessarily mean that lower n-grams are the best for our purpose of generating lyrics. Log-likelihood might not be the best metric for evaluating overfitting and underfitting, and we might need to experiment and research more complex methods, like perplexity. However, given the nature of n-gram, it is likely that we underfit on the lower values of n given that not much context is retained with lower values of n, however, as n gets larger, our model overfits since it is trained on relatively long specific sequences of words.
 
 ## Conclusion section
-The first model has a lot of pitfalls. The model frequently runs into cycles, probably because of the way songs are structured. Choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics.
+The first model has a lot of pitfalls. The model frequently runs into cycles, probably because of the way songs are structured. Choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics. Additionally, for our n-gram, given the efficiency of the models relative to our large dataset, instead of taking all the n-grams over the whole dataset, we only took a random sample. Had we trained on the full dataset, higher n-grams could have performed better seeing more sequences. Furthermore, we could have varied our vocab sizes, leading to more unique n-grams that could change the log likelihoods calculated by our models.
 
-In future models, we hope to find ways to let users input keywords and genres rather than starting prompts, and to give songs more structure
+In future models, we hope to find ways to let users input keywords and genres rather than starting prompts, and to give songs more structure.
