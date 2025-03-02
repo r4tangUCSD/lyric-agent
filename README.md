@@ -119,4 +119,7 @@ In general, we found that values of smaller n had the best log-likelihoods (clos
 ## Conclusion section
 The first model has a lot of pitfalls. The model frequently runs into cycles, probably because of the way songs are structured. Choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics. Additionally, for our n-gram, given the efficiency of the models relative to our large dataset, instead of taking all the n-grams over the whole dataset, we only took a random sample. Had we trained on the full dataset, higher n-grams could have performed better seeing more sequences. Furthermore, we could have varied our vocab sizes, leading to more unique n-grams that could change the log likelihoods calculated by our models.
 
+(change for regrade)
+Log-likelihood might decrease as n increases because as tuples become larger and larger, the chance that a given combination of words exists in our corpus becomes smaller and smaller, regardless of how coherent or likely the sentence actually is. Because of this, we don't think it is reasonable to use log-likelihood as an evaluation metric for this model. We have not yet used NLTK/LanguageTool to evaluate the grammatical consistency of our output. This will hopefully be our evaluation for our next, improved model.
+
 In future models, we hope to find ways to let users input keywords and genres rather than starting prompts, and to give songs more structure.
