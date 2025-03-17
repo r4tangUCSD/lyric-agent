@@ -17,20 +17,20 @@ Training a probabilistic model would look something like this: given the previou
 
 ## PEAS:
 *Performance Measure* \
-Log Likelihood: How probable the generated lyrics are based on training data.
+Log Likelihood: How probable the generated lyrics are based on training data.\
 
 *Environment* \
-Training Dataset: A corpus of song lyrics from Hugging Face.
-User Input: Keywords, parameters, and starting words.
-Fully Observable: The model has access to all necessary information to make decisions.
+Training Dataset: A corpus of song lyrics from Hugging Face.\
+User Input: Keywords, parameters, and starting words.\
+Fully Observable: The model has access to all necessary information to make decisions.\
 
 *Actuators*	\
-Word-by-word lyric generation.
+Word-by-word lyric generation.\
 
 *Sensors* \
-The AI agent takes in user inputs via a keyboard interface
-Keywords, Parameters & Starting Words: Provided by the user.
-Sequential Dependence: Each word prediction depends on previously generated words, as well as a hidden state that represents the structure of the song.
+The AI agent takes in user inputs via a keyboard interface\
+Keywords, Parameters & Starting Words: Provided by the user.\
+Sequential Dependence: Each word prediction depends on previously generated words, as well as a hidden state that represents the structure of the song.\
 
 ## Agent/Model Setup
 In Milestone 2, we used an n-gram model to generate words. This model uses CPTs generated from tokenized lyrics, trying to maximize $P(token_t | token_{t-1}, token_{t-2}, ..., token_{t-n+1})$. 
