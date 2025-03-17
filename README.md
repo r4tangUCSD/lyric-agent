@@ -40,20 +40,20 @@ For this Milestone 3, we implemented a modified Hidden Markov Model. This model 
 
 In a standard HMM, the Markov assumption states that the next hidden state only depends on the previous hidden state, not any states before:
 
-P(St|S0, S1, S2... St-1) = P(St|St-1)
+$P(S_t|S_0, S_1, S_2,... S_{t-1}) = P(S_t|S_{t-1})$
 
 Our HMM model combines this structure with our n-gram model from Milestone2: Instead of being dependent on only the previous hidden state, each state depends on the past n-1 states, and each observation depends on the past n-1 observations (as well as the current hidden state).
 
 Here is how an HMM model with the sections of the song as the hidden states and each word as an observation would look like.
-#Image[](hmm.png)
+![](hmm.png)
 
 In our modified HMM model, since our hidden states depend on the n-1 previous states, the relationship for our hidden state in green would look like the following.
-#Image[](sequence_ngram.png)
+![](sequence_ngram.png)
 
 Our other n-gram for our observations would follow the relationship below, where our observation shaded green not only depends on its corresponding hidden state but also the n-1 previous observations.
-#Image[](word_hmm.png)
+![](word_hmm.png)
 
-This keeps the same functionality as our previous model, but should give our lyrics some underlying structure through the hidden states.
+This keeps the same functionality as our previous model, but should give our lyrics some underlying structure through the hidden states. For example, in a rap song, certain words or phrases may be repeated over and over in a chorus or hook whereas a verse is much more diverse in wording. We aim to model this structure with our HMM implementation, keeping an n-gram for our words and hidden states to get more complex phrases, hopefully less repeat, and better transitions between song sections.
 
 [The notebook where all of our data was cleaned, models were trained, and over/underfitting was calculated is here](hmm_ngram.ipynb)
 
@@ -78,25 +78,29 @@ It's the light of day that shows me how
 And when the night falls
 The loneliness calls
 
-During tokenization, when we detect a song structure label (e.g. [Verse 1]), we pair all following words with this label [(Clock, Verse 1), (strikes, Verse 1), ...] until we hit the next one ([Pre-Chorus]).
-
-Our modified HMM has transition probabilities calculated by:
-
-<!!!> Format better
-Current label | Previous n-1 labels
-
-and emission probabilities calculated by:
-
-Current word | current label, previous n-1 words.
-
-This probablities were calculated with (joint count / prior count)
+During tokenization, when we detect a song structure label (e.g. [Verse 1]), we pair all following words with this label `[(Clock, Verse 1), (strikes, Verse 1), ...]` until we hit the next one `([Pre-Chorus])`.
 
 ## Training
-The HMM algorithms were mostly implemented as described in class, with a few modifications.
+The HMM algorithms were mostly implemented as described in class, with a few modifications. Namely, our transition and emission probabilties are calcualted differently given our n-gram structure for both our hidden states and observations. Our calculations for our transitions and emission probs are based on the idea $\frac{count_{joint}}{count_{prior}}$, which is how you would usually populate your probabilities in a standard n-gram model.
 
-<!!!> link to notebook snippet
+Our transition probabilities are calculated in `get_section_probs()` by:
 
-Our 
+$P(S_t | S_{t-1}, S_{t-2}, ..., S_{t-n_{section}+1}) = \frac{count(S_t, S_{t-1}, S_{t-2}, ..., S_{t-n_{section}+1})}{count(S_{t-1}, S_{t-2}, ..., S_{t-n_{section}+1})}$
+
+and emission probabilities calculated in `get_word_probs()` by:
+
+$P(O_t | S_t, O_{t-1}, O_{t-2}, ..., O_{t-n_{word}+1}) = \frac{count(O_t, S_t, O_{t-1}, O_{t-2}, ..., O_{t-n_{word}+1})}{count(O_{t-1}, O_{t-2}, ..., O_{t-n_{word}+1})}$
+
+To represent our counts, we have dictionaries `word_ngram_counts` and `section_ngram_counts` as class members for our custom class to represent our HMM `NGramHMM`. In the code block below, you should get an idea of what each key is inside our dictionaries.
+
+```
+self.word_ngram_counts = defaultdict(lambda: defaultdict(lambda: defaultdict(int))) # word_ngram_counts[section][prev word_n - 1 words as list][word]
+self.section_ngram_counts = defaultdict(lambda: defaultdict(int)) # section_ngram_counts[prev section_n - 1 sections][section]
+```
+
+Like in our previous model, for keys that required the memorization of n-1 tokens, we put these n-1 tokens into a list and then converted the list into a string to be used as the key.
+
+In our training loop, `fit()`, 
 
 ## Evaluating
 To evaluate, we used log likelihood, like in Milestone 2, even though we are aware it has a few flaws. Below is a heatmap 
