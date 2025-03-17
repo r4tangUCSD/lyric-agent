@@ -9,8 +9,7 @@ https://huggingface.co/datasets/sebastiandizon/genius-song-lyrics
 ## Abstract:
 We propose a probabilistic model that is trained on song lyrics and generates new lyrics given user provided input keywords. This agent is utility-based rather than goal-based because rather than try to achieve a specific outcome, the generated song should maximize fluency/flow.
 
-<!!!> TODO <!!!>
-In addition to using log likelihood as a metric, we can employ a public tool like LanguageTool or NLTK to check how grammatically consistent our generated lyrics are. These criteria will be our performance measure; a song maximizes utility if it outputs coherent English and matches user provided keywords.
+We are using likelihood as our metric because we seek to use the probabilities of our past lyrics to influence the next lyric to be generated. Additionally, as for evaluating how common some given lyrics may be for a certain tag or genre, we use log likelihood to demonstrate this. 
 
 The environment of this agent is simply just the dataset of songs we provide it and the user provided prompts: this environment is fully observable. The actuator of this agent is its output lyrics. This agent’s sensor is the user’s keyboard, which will feed it keywords to generate the song from (like a genre, starting words, etc.). This agent’s actions are sequential because each word generated will depend on the previously generated words.
 
@@ -45,7 +44,14 @@ P(St|S0, S1, S2... St-1) = P(St|St-1)
 
 Our HMM model combines this structure with our n-gram model from Milestone2: Instead of being dependent on only the previous hidden state, each state depends on the past n-1 states, and each observation depends on the past n-1 observations (as well as the current hidden state).
 
-<!!!> Insert picture
+Here is how an HMM model with the sections of the song as the hidden states and each word as an observation would look like.
+#Image[](hmm.png)
+
+In our modified HMM model, since our hidden states depend on the n-1 previous states, the relationship for our hidden state in green would look like the following.
+#Image[](sequence_ngram.png)
+
+Our other n-gram for our observations would follow the relationship below, where our observation shaded green not only depends on its corresponding hidden state but also the n-1 previous observations.
+#Image[](word_hmm.png)
 
 This keeps the same functionality as our previous model, but should give our lyrics some underlying structure through the hidden states.
 
