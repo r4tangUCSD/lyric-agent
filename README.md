@@ -6,6 +6,9 @@
 ## Dataset:
 https://huggingface.co/datasets/sebastiandizon/genius-song-lyrics
 
+## Code:
+[Code](milestone3.ipynb)
+
 ## Abstract:
 We propose a probabilistic model that is trained on song lyrics and generates new lyrics given user provided input keywords. This agent is utility-based rather than goal-based because rather than try to achieve a specific outcome, the generated song should maximize fluency/flow.
 
@@ -17,20 +20,20 @@ Training a probabilistic model would look something like this: given the previou
 
 ## PEAS:
 *Performance Measure* \
-Log Likelihood: How probable the generated lyrics are based on training data.\
+Log Likelihood: How probable the generated lyrics are based on training data.
 
 *Environment* \
 Training Dataset: A corpus of song lyrics from Hugging Face.\
 User Input: Keywords, parameters, and starting words.\
-Fully Observable: The model has access to all necessary information to make decisions.\
+Fully Observable: The model has access to all necessary information to make decisions.
 
 *Actuators*	\
-Word-by-word lyric generation.\
+Word-by-word lyric generation.
 
 *Sensors* \
 The AI agent takes in user inputs via a keyboard interface\
 Keywords, Parameters & Starting Words: Provided by the user.\
-Sequential Dependence: Each word prediction depends on previously generated words, as well as a hidden state that represents the structure of the song.\
+Sequential Dependence: Each word prediction depends on previously generated words, as well as a hidden state that represents the structure of the song.
 
 ## Agent/Model Setup
 In Milestone 2, we used an n-gram model to generate words. This model uses CPTs generated from tokenized lyrics, trying to maximize $P(token_t | token_{t-1}, token_{t-2}, ..., token_{t-n+1})$. 
@@ -54,7 +57,7 @@ Our other n-gram for our observations would follow the relationship below, where
 
 This keeps the same functionality as our previous model, but should give our lyrics some underlying structure through the hidden states. For example, in a rap song, certain words or phrases may be repeated over and over in a chorus or hook whereas a verse is much more diverse in wording. We aim to model this structure with our HMM implementation, keeping an n-gram for our words and hidden states to get more complex phrases, hopefully less repeat, and better transitions between song sections.
 
-[The notebook where all of our data was cleaned, models were trained, and over/underfitting was calculated is here](hmm_ngram.ipynb)
+[The notebook where all of our data was cleaned, models were trained, and over/underfitting was calculated is here](milestone3.ipynb)
 
 ## Dataset and preprocessing:
 In the dataset we chose, each row contains information on a single song - it's `lyrics`, `artist`, `genre`, `language`, `features`, etc. For the purposes of this first model, most of these columns are irrelevant. We are mainly concerned with the lyrics and the "tag" column, which contains the genre (rap, pop) of the song. Before we calculated CPTs, we filtered songs by "language," and kept only songs in English. After performing this filter, we had *3,374,198* rows in our dataset.
