@@ -204,9 +204,9 @@ def get_section_probs(self, section_ngram, section):
 ```
 Finally, we can calculate our log likelihood by summing over `alpha[L - 1]`, where L is the number of given lyrics. 
 
-Using our `NgramHMM` model with `tag=rap`, `word_n=3`, `section_n=3`, we tried 
-
 ===================================================================================================================================
+
+Using our `NgramHMM` model with `tag=pop`, `word_n=3`, `section_n=3`, we tried 
 
 <!!!> Insert heatmap
 
