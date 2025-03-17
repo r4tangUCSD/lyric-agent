@@ -13,9 +13,7 @@ We are using likelihood as our metric because we seek to use the probabilities o
 
 The environment of this agent is simply just the dataset of songs we provide it and the user provided prompts: this environment is fully observable. The actuator of this agent is its output lyrics. This agent’s sensor is the user’s keyboard, which will feed it keywords to generate the song from (like a genre, starting words, etc.). This agent’s actions are sequential because each word generated will depend on the previously generated words.
 
-Training a probabilistic model would look something like this: given the previous words in the song, and the given keywords (like a given genre or topic), what is the next most likely word? As our model increases in complexity, we can incorporate song structure and create more and more coherent lyrics. We will be using different methods introduced in class to implement our agent, such as Naive Bayes, HMM, 
-
-
+Training a probabilistic model would look something like this: given the previous words in the song, and the given keywords (like a given genre or topic), what is the next most likely word? As our model increases in complexity, we can incorporate song structure and create more and more coherent lyrics. We will be using different methods introduced in class to implement our agent, such as HMM.
 
 ## PEAS:
 *Performance Measure* \
@@ -127,24 +125,83 @@ In our training loop, `fit()`, we filtered our songs by user-given `tag` and cho
 As for populating our counts, like the last milestone, we used deques of size corresponding n - 1 to represent our two n-grams. As we iterated word by word in our relevant songs, we would add 1 to each of our counts, using our deques converted to `list` and then `string` and our current `section` and `token` as keys for our dictionaries. Then, we would update our n-gram deques by appending our current `token` or `section` and then popping the leftmost element, shifting our n-grams to the next word.
 ```
 word_ngram = deque([self.START_TOKEN] * (self.word_n - 1))
-        section_ngram = deque([self.START_TOKEN] * (self.section_n - 1))
-        for _, song in tqdm(enumerate(songs_in_tag), total=len(songs_in_tag)):
-            #print(_)
-            #print(song)
-            for token, section in song:
-                self.word_ngram_counts[section][str(list(word_ngram))][token] += 1
-                self.section_ngram_counts[str(list(section_ngram))][section] += 1
-                word_ngram.append(token if token in self.vocab else self.UNK_TOKEN)
-                section_ngram.append(section)
-                word_ngram.popleft()
-                section_ngram.popleft()
+section_ngram = deque([self.START_TOKEN] * (self.section_n - 1))
+for _, song in tqdm(enumerate(songs_in_tag), total=len(songs_in_tag)):
+    for token, section in song:
+        self.word_ngram_counts[section][str(list(word_ngram))][token] += 1
+        self.section_ngram_counts[str(list(section_ngram))][section] += 1
+        word_ngram.append(token if token in self.vocab else self.UNK_TOKEN)
+        section_ngram.append(section)
+        word_ngram.popleft()
+        section_ngram.popleft()
 ```
 Now that we have our counts, we are able to calculate our transition and emissions probs to be used to calculate log-likelihood and to be used in song generation.
 
 ## Evaluating
 Our evaluation metric is log likelihood. As mentioned way earlier, we use log likelihood to evaluate how probable a sequence of lyrics are. Additionally, it is convienent for us since we need to use likelihood of our n-grams to generate our new tokens and sections.
 
-To calculate our log likelihood, since our model is an HMM, given a predetermined sequence of lyrics we use the forward algorithm to calculate $P(lyrics)$ or $P(token_1, token_2, ..., token_{|lyrics|})$
+To calculate our log likelihood, since our model is an HMM, given a predetermined sequence of lyrics, we use the forward algorithm to calculate $P(lyrics)$ or $P(token_1, token_2, ..., token_{|lyrics|})$. 
+```
+def get_log_likelihood(self, lyrics):
+```
+
+To start off, our initial probabilities are calculated as the $P(section_{first}) = \frac{count(section_{first})}{|songs_{tag}|}$, which means the probability of a certain section being the first section is calculated by the number of times the section is first in a song in the tag over the number of songs in the tag.
+
+```
+first_section = ""
+for token, section in song["lyric_tokens"]:
+    if first_section == "":
+        self.initial_probs[section] += 1
+```
+Above, we calculate $count(section_{first})$. Below, we calculate $P(section_{first})$ with the addition of laplace smoothing to deal with rare section labels that may appear first.
+```
+# handle initial probs
+for section in self.states:
+    self.initial_probs[section] = (self.initial_probs[section] + self.smoothing) / (len(songs_in_tag) + self.smoothing * len(songs_in_tag))
+```
+So, we have our initial probs, which allow us to calculate our initial $alpha$ in our forward algorithm. Just like in a standard forward algorithm using log likelihood, for each state, we populate the first time step with the sum of the log of the initial probs and the log of the emission probs.
+```
+for section_idx in range(self.S):
+    alpha[0, section_idx] = np.log(self.initial_probs[self.states[section_idx]]) + np.log(self.get_word_probs(word_ngram, lyrics[0], self.states[section_idx]))
+```
+To reiterate, our emission probs is `get_word_probs`, which is calculated by the following. 
+$P(O_t | S_t, O_{t-1}, O_{t-2}, ..., O_{t-n_{word}+1}) = \frac{count(O_t, S_t, O_{t-1}, O_{t-2}, ..., O_{t-n_{word}+1})}{count(O_{t-1}, O_{t-2}, ..., O_{t-n_{word}+1})}$
+Using the counts we populated during training, we calculate our emission probs with the following.
+```
+# use for emissions
+def get_word_probs(self, word_ngram, word, section):
+    prior = str(list(word_ngram))
+    prior_count = sum(sum(self.word_ngram_counts[sec][prior].values()) for sec in self.states) # marginalize over section since our prior should just be the prev n - 1 words
+    return (self.word_ngram_counts[section][prior][word] + self.smoothing) / (prior_count + self.smoothing * self.T)
+```
+One interesting thing to notice is that we marginalize over the section since `word_ngram_counts` is a 3-dimensional dictionary, which requires two keys to actual get values that can be summed. Additionally, we use laplace smoothing to deal with rare words.
+
+Now, we can get to the meat and potatoes of the forward algorithm. As usual, we iterate through each time step or in this case, lyric in our given lyrics. Then, we iterate through each of our current states, but instead of considering all of the previous states in a standard HMM, due to our hidden state n-gram, we use iterate over `itertools.product(range(self.S), repeat=self.section_n-1)`, which should give us all possible hidden state combinations of length `section_n-1` - simulating the possible previous states in our n-gram. We total up everything in log-space using our log emissions, log transitions, and previous `alpha`, updating our `alpha` at our current lyric step and state accordingly. Finally, we shift our word/observation n-gram.
+```
+# use forward algorithm to calculate the log likelihood of the given lyrics
+for lyrics_idx in tqdm(range(1, L)):
+    cur_word = lyrics[lyrics_idx]
+    for cur_state_idx, cur_state in enumerate(self.states):
+        log_obs = np.log(self.get_word_probs(word_ngram, cur_word, cur_state))
+        tot = -np.inf
+        for prev_states in itertools.product(range(self.S), repeat=self.section_n-1):
+            prev_sections = [self.states[state] for state in prev_states]
+            log_transition = self.get_section_probs(prev_sections, cur_state)
+            tot = np.logaddexp(tot, log_transition + alpha[lyrics_idx - 1, prev_states[-1]])
+        alpha[lyrics_idx, cur_state_idx] = tot + log_obs
+    word_ngram.append(cur_word)
+    word_ngram.popleft()
+```
+Our transition probs are calculated similar to our emission probs. Again, to reiterate, our transition probs are calculated in `get_section_probs()`, which essentially does the following calculation. 
+$P(S_t | S_{t-1}, S_{t-2}, ..., S_{t-n_{section}+1}) = \frac{count(S_t, S_{t-1}, S_{t-2}, ..., S_{t-n_{section}+1})}{count(S_{t-1}, S_{t-2}, ..., S_{t-n_{section}+1})}$
+Using our counts, below is an implementation of the above.
+```
+# use for transitions
+def get_section_probs(self, section_ngram, section):
+    prior = str(list(section_ngram))
+    prior_count = sum(self.section_ngram_counts[prior].values())
+    return (self.section_ngram_counts[prior][section] + self.smoothing) / (prior_count + self.smoothing * self.S) # apply laplace smoothing
+```
 
 <!!!> Insert heatmap
 
