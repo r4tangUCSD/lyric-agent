@@ -219,33 +219,17 @@ hmm_model.get_log_likelihood(test_lyrics)
 ```
 A shorter and more likely case is above with a log likelihood of around -188, which makes sense, however, the difference in log likelihood is not as high as anticipated given that the sequence is less than half the length of the previous. It could likely be a result of the shortened version of "want to" using "wanna" and just that the following sequence of words is not as common as we thought.
 
-
-
-<!!!> Insert heatmap
-
+We then sought to evaluate the performance of our model with different parameters with `tag=pop` still with the parameters below.
 ```
-ll = 0.0
-    ngram = deque([self.START_TOKEN] * (self.n - 1))
-    for word in sentence:
-      ngram.append(word)
-      ngram_prob = self.get_ngram_probability(ngram)
-      ll += -np.inf if ngram_prob == 0 else np.log(ngram_prob)
-      ngram.popleft()
-    return ll
+section_n = [2, 3]
+word_n = [1, 2, 3, 4, 5, 6]
 ```
-To get our n-gram probabilities, we used the likelihood formulas from class, specifically, the probability of the n-gram (nth word given prior) divided by the sum of all possible nths words given our prior. Additionally, later during our implementation, to avoid zero probability n-grams, we utilized laplace smoothing. 
+We have provided a heatmap on the log likelihoods calculated by these different models on the first evaluation sequence we used above from Gotye's "Somebody That I Used to Know".
+![](heatmap.png)
 
-```
- def get_ngram_probability(self, ngram):
-    ngram = [self.UNK_TOKEN if token not in self.vocab else token for token in ngram]
-    prior = str(ngram[:-1]) # prior should be ngram except last token
-    prior_count = sum(self.count[prior][word] for word in self.count[prior].keys()) # count is in the form count[prior][nth word] -> get prior_counts by summing all count[prior][arbitrary word]
-    # probability of ngram should be count(nth word | prior words) / count(prior words)
-    return (self.count[prior][ngram[-1]] + 1) / (prior_count + len(self.vocab)) # apply laplace smoothing
-```
+*NOTE: We just noticed our axes are labeled reverse, so the x-axis should actually be the y-axis and vice versa. Please don't dock points... Additionally, due to performance and efficiency concerns, we tried up to a bigram for our hidden state n-gram.*
 
-As for evaluation, we fed specific test sequences to our n-gram models and calculated the log likelihood of those sequences. You will see the results below.
-
+Our heatmap suggests a combination of a hidden state bigram and higher order observation n-grams perform the best. Although comparing these models side to side by log likelihoods on the same sequence is not totally indicative of better performance, we can see that even as the observation n-gram increases in n, the log likelihood stagnates around the same value, indicating that the -290s to -300s range is the accurate mark.
 
 ## Overfitting / Underfitting
 
