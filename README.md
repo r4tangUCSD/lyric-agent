@@ -204,9 +204,22 @@ def get_section_probs(self, section_ngram, section):
 ```
 Finally, we can calculate our log likelihood by summing over `alpha[L - 1]`, where L is the number of given lyrics. 
 
-===================================================================================================================================
+Using our `NgramHMM` model with `tag=pop`, `word_n=3`, `section_n=3`, we tried our model on the same cases as the previous model to evaluate.
+```
+# to evaluate our models, we will use lyrics from Gotye's "Somebody That I Used to Know"
+test_lyrics = ['now', 'and', 'then', ',', 'i', 'think', 'of', 'all', 'the', 'times', 'you', 'screwed', 'me', 'over']
+hmm_model.get_log_likelihood(test_lyrics)
+```
+On this example, we resulted in a log likelihood around -294, which means the sequence is decently probable given that it is 14 words long. 
 
-Using our `NgramHMM` model with `tag=pop`, `word_n=3`, `section_n=3`, we tried 
+```
+# to evaluate our models, we will use lyrics from Whitney Houston's "I Wanna Dance With Somebody"
+test_lyrics = ['i', 'wanna', 'dance', 'with', 'somebody']
+hmm_model.get_log_likelihood(test_lyrics)
+```
+A shorter and more likely case is above with a log likelihood of around -188, which makes sense, however, the difference in log likelihood is not as high as anticipated given that the sequence is less than half the length of the previous. It could likely be a result of the shortened version of "want to" using "wanna" and just that the following sequence of words is not as common as we thought.
+
+
 
 <!!!> Insert heatmap
 
