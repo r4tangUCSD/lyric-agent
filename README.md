@@ -235,41 +235,44 @@ Our heatmap suggests a combination of a hidden state bigram and higher order obs
 
 Like before, we think lower values of n will underfit and the higher values of n will overfit. Lower values of n won't be enough to capture all the patterns in our dataset of songs. Higher values will create good training data, but will perform bad on test data because unseen song lyrics will be viewed as unlikely even if they capture general patterns
 
-We randomly sampled 10,000 songs and tested models of n = [2, 3, 4, 5].
+We randomly sampled 10,000 songs and tested models of `n = [2, 3, 4, 5]`.
 
 Here are some sample lyrics generated:
-Each model is given a tag (genre), the number of previous words to consider, and previous hidden states to consider.
+Each model is given a `tag` (genre), the number of previous words to consider, and previous hidden states to consider.
 When we generate lyrics, we provide a list of starting words and a starting section.
 
 `tag='rap', word_n = 3, section_n = 3, starter=["[", "Intro", "]", "I", "see", "dead", "people"], start_section="Intro"`
+
 Generated Lyrics:
-[ Intro ] I see dead people , you know i got a lot of shit , i don't know what i'm gon' do , all they gotta do , all they gotta do , all they
+`[ Intro ] I see dead people , you know i got a lot of shit , i don't know what i'm gon' do , all they gotta do , all they gotta do , all they`
 
 Section Sequence:
-['Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']
+`['Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']`
 
 `tag='rap', word_n = 4, section_n = 2, starter=['hi', ',', 'you', 'are'], start_section="Verse"`
+
 Generated Lyrics:
-hi , you are all in my mind , but i don't believe in that shit and then turn it up , fuck it up , fuck it up , fuck it up ,
+`hi , you are all in my mind , but i don't believe in that shit and then turn it up , fuck it up , fuck it up , fuck it up ,`
 
 Section Sequence:
-['Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Hook', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']
+`['Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Hook', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']`
 
 `tag='country', word_n = 3, section_n = 2, starter=['dance','with'], start_section="Chorus"`
+
 Generated Lyrics:
-dance with you but one day , you're something else i'm all out of the night funny i remember i the the the the the the the the the the the the
+`dance with you but one day , you're something else i'm all out of the night funny i remember i the the the the the the the the the the the the`
 
 Section Sequence:
-['Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse']
+`['Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse']`
 
 The model performed with varying success, but almost always eventually got caught in a loop. Once it hits a loop, like when the first example repeats "all they gotta do , " over and over, it can't escape. It also seems that the song sections flow like they would in a normal song, though they switch at a much faster pace - first example, it starts in the Intro, transitiosn to a Verse, and then ends in a Chorus, which is not unlike the structure of real songs.
 
 Below is the results of our different n-gram models on the lyrics `['now', 'and', 'then', ',', 'i', 'think', 'of', 'all', 'the', 'times', 'you', 'screwed', 'me', 'over']` from Gotye's "Somebody That I Used To Know".
 
-For section_n = 2 (Each hidden state considers the previous 2 hidden states)
+For `section_n = 2` (Each hidden state considers the previous 2 hidden states)
 ![](section_n_gram_2.png)
 
-For section_n = 3 (Each hidden state considers the previous 3 hidden states)
+For `section_n = 3` (Each hidden state considers the previous 3 hidden states)
 ![](section_n_gram_3.png)
 
 We see that log likelihood increases until n=3, and then stays at around the same level. It's hard to say from the graphs, but it looks like the log likelihood slowly decreases as n gets bigger: for very large values of n, this model might be overfit, but models of large n would be too costly for us to reasonably run. We're not sure why the likelihood decreases so slowly - we suspect one possible reason this could happen is because n-grams for high n are so rare that laplace smoothing might account for the fact that most n-grams don't exist in the corpus.
