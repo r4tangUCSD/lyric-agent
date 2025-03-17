@@ -118,7 +118,7 @@ self.word_ngram_counts = defaultdict(lambda: defaultdict(lambda: defaultdict(int
 self.section_ngram_counts = defaultdict(lambda: defaultdict(int)) # section_ngram_counts[prev section_n - 1 sections][section]
 ```
 
-Like in our previous model, for keys that required the memorization of n-1 tokens, we put these n-1 tokens into a `list` and then converted the `list` into a `string` to be used as the key.
+Like in our previous model, for keys that required the memorization of n-1 tokens, we put these n-1 tokens into a `list` and then converted the `list` into a `string` to be used as the key. Since we have two different n-grams, we need two different n's. For our hidden state n-gram, we have `section_n` and for our observation n-gram, we have `word_n`.
 
 In our training loop, `fit()`, we filtered our songs by user-given `tag` and chose the most `vocab_size` common words from the songs we had left to form our vocabulary. All words outside the vocabulary would then be interpretted as an `UNK_TOKEN` later when processing our n-grams.
 
@@ -202,6 +202,11 @@ def get_section_probs(self, section_ngram, section):
     prior_count = sum(self.section_ngram_counts[prior].values())
     return (self.section_ngram_counts[prior][section] + self.smoothing) / (prior_count + self.smoothing * self.S) # apply laplace smoothing
 ```
+Finally, we can calculate our log likelihood by summing over `alpha[L - 1]`, where L is the number of given lyrics. 
+
+Using our `NgramHMM` model with `tag=rap`, `word_n=3`, `section_n=3`, we tried 
+
+===================================================================================================================================
 
 <!!!> Insert heatmap
 
