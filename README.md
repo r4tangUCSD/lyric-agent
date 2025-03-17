@@ -60,11 +60,32 @@ This keeps the same functionality as our previous model, but should give our lyr
 ## Dataset and preprocessing:
 In the dataset we chose, each row contains information on a single song - it's lyrics, artist, genre, language, features, etc. For the purposes of this first model, most of these columns are irrelevant. We are mainly concerned with the lyrics and the "tag" column, which contains the genre (rap, pop) of the song. Before we calculated CPTs, we filtered songs by "language," and kept only songs in English. After performing this filter, we had *3,374,198* rows in our dataset.
 
-<!!!> Add the picture
-
 The cleaned datasets are way too big to upload into the repository, but we include a sample .csv of 100 songs after preprocessing and before tokenization [here](genius_lyrics_small.csv). This .csv wasn't used in training, and is just an example of the cleaning we did on the much larger dataset.
 
-Like before, lyrics were tokenized by splitting the lyrics, including punctuation, and then trained. We applied laplace smoothing to avoid 0 probability n-grams, which was necessary to get meaningful log-likliehoods in the next step. But instead of just storing word counts, we paired each word with it's corresponding song structure label. In the provided genius lyric dataset, labels precede each part of the song.
+Like before, lyrics were tokenized by splitting the lyrics, including punctuation, and then trained. Below, since we knew that each section label was indicated by an opening bracket [, we simply assigned each of our tokens to the current section, which was the word following the opening bracket [.
+
+```
+import re
+
+def generate_tokens(batch):
+    tokenized_lyrics = []
+    for lyrics in batch["lyrics"]:
+        tokens = re.findall(r"[\w']+|[.,!?;(){}\[\]]", lyrics) # tokenize by word and punctuation
+        section = "N/A"
+        sectioned_tokens = []  # stores (word, section) pairs
+
+        for token_idx, token in enumerate(tokens):
+            if token == "[":
+                section = tokens[token_idx + 1]
+            sectioned_tokens.append((token.lower(), section))
+        tokenized_lyrics.append(sectioned_tokens)
+
+    return {"lyric_tokens": tokenized_lyrics}
+
+dataset = dataset.map(generate_tokens, batched=True, num_proc=num_cpus)
+```
+
+We applied laplace smoothing to avoid 0 probability n-grams, which was necessary to get meaningful log-likelihoods in the next step. But instead of just storing word counts, we paired each word with it's corresponding song structure label. In the provided genius lyric dataset, labels precede each part of the song.
 
 [Verse 1]
 Clock strikes upon the hour
@@ -98,9 +119,26 @@ self.word_ngram_counts = defaultdict(lambda: defaultdict(lambda: defaultdict(int
 self.section_ngram_counts = defaultdict(lambda: defaultdict(int)) # section_ngram_counts[prev section_n - 1 sections][section]
 ```
 
-Like in our previous model, for keys that required the memorization of n-1 tokens, we put these n-1 tokens into a list and then converted the list into a string to be used as the key.
+Like in our previous model, for keys that required the memorization of n-1 tokens, we put these n-1 tokens into a `list` and then converted the `list` into a `string` to be used as the key.
 
-In our training loop, `fit()`, 
+In our training loop, `fit()`, we filtered our songs by user-given `tag` and chose the most `vocab_size` common words from the songs we had left to form our vocabulary. All words outside the vocabulary would then be interpretted as an `UNK_TOKEN` later when processing our n-grams.
+
+As for populating our counts, like the last milestone, we used deques of size corresponding n - 1 to represent our two n-grams. As we iterated word by word in our relevant songs, we would add 1 to each of our counts, using our deques converted to `list` and then `string` and our current `section` and `token` as keys for our dictionaries. Then, we would update our n-gram deques by appending our current `token` or `section` and then popping the leftmost element, shifting our n-grams to the next word.
+```
+word_ngram = deque([self.START_TOKEN] * (self.word_n - 1))
+        section_ngram = deque([self.START_TOKEN] * (self.section_n - 1))
+        for _, song in tqdm(enumerate(songs_in_tag), total=len(songs_in_tag)):
+            #print(_)
+            #print(song)
+            for token, section in song:
+                self.word_ngram_counts[section][str(list(word_ngram))][token] += 1
+                self.section_ngram_counts[str(list(section_ngram))][section] += 1
+                word_ngram.append(token if token in self.vocab else self.UNK_TOKEN)
+                section_ngram.append(section)
+                word_ngram.popleft()
+                section_ngram.popleft()
+```
+Now that we have our counts, we are able to calculate our transition and emissions probs to be used to calculate log-likelihood and to be used in song generation.
 
 ## Evaluating
 To evaluate, we used log likelihood, like in Milestone 2, even though we are aware it has a few flaws. Below is a heatmap 
