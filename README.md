@@ -235,37 +235,44 @@ Our heatmap suggests a combination of a hidden state bigram and higher order obs
 
 Like before, we think lower values of n will underfit and the higher values of n will overfit. Lower values of n won't be enough to capture all the patterns in our dataset of songs. Higher values will create good training data, but will perform bad on test data because unseen song lyrics will be viewed as unlikely even if they capture general patterns
 
-Ideally, to test for overfitting and underfitting, we'd train the model using different values of n (bigram, trigram, etc). The problem with this is that because the dataset is so huge, and since computation because more and more costly for higher values of n, it becomes unfeasible for us to train so many models. 
-
 We randomly sampled 10,000 songs and tested models of n = [2, 3, 4, 5].
 
 Here are some sample lyrics generated:
+Each model is given a tag (genre), the number of previous words to consider, and previous hidden states to consider.
+When we generate lyrics, we provide a list of starting words and a starting section.
 
-`n = 2, input = ['hi']`
-hi, i know that i know that i know that i know that i know that
+`tag='rap', word_n = 3, section_n = 3, starter=["[", "Intro", "]", "I", "see", "dead", "people"], start_section="Intro"`
+Generated Lyrics:
+[ Intro ] I see dead people , you know i got a lot of shit , i don't know what i'm gon' do , all they gotta do , all they gotta do , all they
 
-Here, we loop between "i know that," which is to be expected with a low n.
+Section Sequence:
+['Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']
 
-`n = 5, input = ['hi', ',', 'you', 'are']`
-hi, you are of the lord 2x my god has made his favour, to be manifested upon
+`tag='rap', word_n = 4, section_n = 2, starter=['hi', ',', 'you', 'are'], start_section="Verse"`
+Generated Lyrics:
+hi , you are all in my mind , but i don't believe in that shit and then turn it up , fuck it up , fuck it up , fuck it up ,
 
-These lyrics are actually pretty coherent, and look like they come from a Christian song.
+Section Sequence:
+['Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Hook', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']
 
-`n = 6, input = ['hi', ',', 'you', 'are', 'my']`
-hi, you are my, beautiful mess baby you are my beautiful, beautiful mess baby you are my
+`tag='country', word_n = 3, section_n = 2, starter=['dance','with'], start_section="Chorus"`
+Generated Lyrics:
+dance with you but one day , you're something else i'm all out of the night funny i remember i the the the the the the the the the the the the
 
-These lyrics also start to repeat, but the lyrics at least form a coherent message.
-In Milestone3, the main issue we had was that lyrics would repeat often. We hoped that adding song structure would mitigate.
+Section Sequence:
+['Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse']
 
-Then, we used sample lyrics from hit pop songs and calculated the negative log likelihood of each set of lyrics.
+The model performed with varying success, but almost always eventually got caught in a loop. Once it hits a loop, like when the first example repeats "all they gotta do , " over and over, it can't escape. It also seems that the song sections flow like they would in a normal song, though they switch at a much faster pace - first example, it starts in the Intro, transitiosn to a Verse, and then ends in a Chorus, which is not unlike the structure of real songs.
 
-Below is the results of our different n-gram models on the lyrics `['now', 'and', 'then', ',', 'i', 'think', 'of', 'all', 'the', 'times', 'you', 'screwed', 'me', 'over']` from Gotye's "Somebody That I Used To Know"
-![](gotye_results.png)
+Below is the results of our different n-gram models on the lyrics `['now', 'and', 'then', ',', 'i', 'think', 'of', 'all', 'the', 'times', 'you', 'screwed', 'me', 'over']` from Gotye's "Somebody That I Used To Know".
 
-Here are the results of our different n-gram models on a simpler test sequence `['i', 'wanna', 'dance', 'with', 'somebody']` from Whitney Houston's "I Wanna Dance With Somebody"
-![](whitney_houston_results.png)
+For section_n = 2 (Each hidden state considers the previous 2 hidden states)
+![](section_n_gram_2.png)
 
-In general, we found that values of smaller n had the best log-likelihoods (closest to 0). In particular, it seems like our bigram model performed the best on those specific lyrics. As n increased, our log likelihood became further away from 0, indicating signs of overfitting since we were performing worse on the "test" data. Given our model, this makes sense, however this doesn't necessarily mean that lower n-grams are the best for our purpose of generating lyrics. Log-likelihood might not be the best metric for evaluating overfitting and underfitting, and we might need to experiment and research more complex methods, like perplexity. However, given the nature of n-gram, it is likely that we underfit on the lower values of n given that not much context is retained with lower values of n, however, as n gets larger, our model overfits since it is trained on relatively long specific sequences of words.
+For section_n = 3 (Each hidden state considers the previous 3 hidden states)
+![](section_n_gram_3.png)
+
+We see that log likelihood increases until n=3, and then stays at around the same level. It's hard to say from the graphs, but it looks like the log likelihood slowly decreases as n gets bigger: for very large values of n, this model might be overfit, but models of large n would be too costly for us to reasonably run. We're not sure why the likelihood decreases so slowly - we suspect one possible reason this could happen is because n-grams for high n are so rare that laplace smoothing might account for the fact that most n-grams don't exist in the corpus.
 
 ## Conclusion section
 This model has noticeable improvements compared to our first model. While the model is still prone to running into cycles, the added hidden state makes it a little harder for it to be stuck into loops. Even so, like before, choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics. Additionally, for our n-gram, given the efficiency of the models relative to our large dataset, instead of taking all the n-grams over the whole dataset, we only took a random sample. Had we trained on the full dataset, higher n-grams could have performed better seeing more sequences. Furthermore, we could have varied our vocab sizes, leading to more unique n-grams that could change the log likelihoods calculated by our models. Unless we do specific things to mitigate loops, we suspect that it will always be an issue in any n-gram model. One consequence of having n-grams for the observations is that it makes it very unlikely for the hidden state to change, which makes loops more likely.
