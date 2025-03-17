@@ -90,8 +90,13 @@ The HMM algorithms were mostly implemented as described in class, with a few mod
 
 <!!!> link to notebook snippet
 
+Our 
+
 ## Evaluating
 To evaluate, we used log likelihood, like in Milestone 2, even though we are aware it has a few flaws. Below is a heatmap 
+
+<!!!> Insert heatmap
+
 ```
 ll = 0.0
     ngram = deque([self.START_TOKEN] * (self.n - 1))
@@ -140,6 +145,7 @@ These lyrics are actually pretty coherent, and look like they come from a Christ
 hi, you are my, beautiful mess baby you are my beautiful, beautiful mess baby you are my
 
 These lyrics also start to repeat, but the lyrics at least form a coherent message.
+In Milestone3, the main issue we had was that lyrics would repeat often. We hoped that adding song structure would mitigate.
 
 Then, we used sample lyrics from hit pop songs and calculated the negative log likelihood of each set of lyrics.
 
@@ -152,11 +158,13 @@ Here are the results of our different n-gram models on a simpler test sequence `
 In general, we found that values of smaller n had the best log-likelihoods (closest to 0). In particular, it seems like our bigram model performed the best on those specific lyrics. As n increased, our log likelihood became further away from 0, indicating signs of overfitting since we were performing worse on the "test" data. Given our model, this makes sense, however this doesn't necessarily mean that lower n-grams are the best for our purpose of generating lyrics. Log-likelihood might not be the best metric for evaluating overfitting and underfitting, and we might need to experiment and research more complex methods, like perplexity. However, given the nature of n-gram, it is likely that we underfit on the lower values of n given that not much context is retained with lower values of n, however, as n gets larger, our model overfits since it is trained on relatively long specific sequences of words.
 
 ## Conclusion section
-The first model has a lot of pitfalls. The model frequently runs into cycles, probably because of the way songs are structured. Choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics. Additionally, for our n-gram, given the efficiency of the models relative to our large dataset, instead of taking all the n-grams over the whole dataset, we only took a random sample. Had we trained on the full dataset, higher n-grams could have performed better seeing more sequences. Furthermore, we could have varied our vocab sizes, leading to more unique n-grams that could change the log likelihoods calculated by our models.
+This model has noticeable improvements compared to our first model. While the model is still prone to running into cycles, the added hidden state makes it a little harder for it to be stuck into loops. Even so, like before, choruses and repetitive parts of song lyrics will inflate the probabilities in the CPT table, making it harder to generate interesting and unique lyrics. Additionally, for our n-gram, given the efficiency of the models relative to our large dataset, instead of taking all the n-grams over the whole dataset, we only took a random sample. Had we trained on the full dataset, higher n-grams could have performed better seeing more sequences. Furthermore, we could have varied our vocab sizes, leading to more unique n-grams that could change the log likelihoods calculated by our models. Unless we do specific things to mitigate loops, we suspect that it will always be an issue in any n-gram model. One consequence of having n-grams for the observations is that it makes it very unlikely for the hidden state to change, which makes loops more likely.
 
-Log-likelihood might decrease as n increases because as tuples become larger and larger, the chance that a given combination of words exists in our corpus becomes smaller and smaller, regardless of how coherent or likely the sentence actually is. Because of this, we don't think it is reasonable to use log-likelihood as an evaluation metric for this model. We have not yet used NLTK/LanguageTool to evaluate the grammatical consistency of our output. This will hopefully be our evaluation for our next, improved model.
+write about the pros and cons of likelihood, why we got our results
 
-In future models, we hope to find ways to let users input keywords and genres rather than starting prompts, and to give songs more structure.
+Future iterations of this model should first address the issue of loops: we could give increasing penalities to repeated hidden states: over time, it becomes more and more likely for the label to switch. Right now, our lyric generation is purely greedy, but if we wanted to get more varied lyrics we could consider adding some noise or randomness - this would further help mitigate loops.
+
+This model could also benefit from even more parameters and user freedom - we could give the user more control over the generated lyrics by allowing them to select specific artists or time periods to sample from.
 
 # Generative AI:
 We used ChatGPT to help us implement tricky functions and debug our code. It was particularly useful in the creation of the NGramHMM class, helping us with functions like Viterbis, and for suggesting Perplexity as an alternative evaluation metric to log-likelihood.
@@ -165,14 +173,3 @@ We used ChatGPT to help us implement tricky functions and debug our code. It was
 
 Dataset:
 https://huggingface.co/datasets/sebastiandizon/genius-song-lyrics
-
-
-
-
-
-Conclusion/Results (20pts)
-
-Describe in detail your results, including any helpful visualizations like heatmaps, confusion matrices, etc. (if applicable). Please provide numerical results (unless your model's performance metrics do not include numbers).
-Be sure to interpret your results! If you obtain a poor performance, compare it to some baseline easy task (i.e. random guessing, etc.) so you can have an estimate as to where your model performance is at.
-Propose various points of improvement for your model, and be thorough! Do not just say "we could use more data", or "I'll be sure to use reinforcement learning for the next milestone so we can better model our objective." Carefully work through your data preprocessing, your training steps, and point out any simplifications that may have impacted model performance, or perhaps any potential errors or biases in the dataset. You are not required to implement these points of improvement unless it is clear that your original model is significantly lacking in detail or effort.
-Additional Notes (points to be subtracted)
