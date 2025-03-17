@@ -34,7 +34,8 @@ The AI agent takes in user inputs via a keyboard interface
 Keywords, Parameters & Starting Words: Provided by the user.
 Sequential Dependence: Each word prediction depends on previously generated words, as well as a hidden state that represents the structure of the song.
 
-In Milestone 2, we used an n-gram model to generate words. This model uses CPTs generated from tokenized lyrics, trying to maximize P(next token | last n tokens). 
+## Agent/Model Setup
+In Milestone 2, we used an n-gram model to generate words. This model uses CPTs generated from tokenized lyrics, trying to maximize $P(token_t | token_{t-1}, token_{t-2}, ..., token_{t-n+1})$. 
 
 For this Milestone 3, we implemented a modified Hidden Markov Model. This model uses hidden states as song structure labels (Verse, Chorus, Bridge) and words ("beautiful", "dance") as observations.
 
@@ -58,7 +59,7 @@ This keeps the same functionality as our previous model, but should give our lyr
 [The notebook where all of our data was cleaned, models were trained, and over/underfitting was calculated is here](hmm_ngram.ipynb)
 
 ## Dataset and preprocessing:
-In the dataset we chose, each row contains information on a single song - it's lyrics, artist, genre, language, features, etc. For the purposes of this first model, most of these columns are irrelevant. We are mainly concerned with the lyrics and the "tag" column, which contains the genre (rap, pop) of the song. Before we calculated CPTs, we filtered songs by "language," and kept only songs in English. After performing this filter, we had *3,374,198* rows in our dataset.
+In the dataset we chose, each row contains information on a single song - it's `lyrics`, `artist`, `genre`, `language`, `features`, etc. For the purposes of this first model, most of these columns are irrelevant. We are mainly concerned with the lyrics and the "tag" column, which contains the genre (rap, pop) of the song. Before we calculated CPTs, we filtered songs by "language," and kept only songs in English. After performing this filter, we had *3,374,198* rows in our dataset.
 
 The cleaned datasets are way too big to upload into the repository, but we include a sample .csv of 100 songs after preprocessing and before tokenization [here](genius_lyrics_small.csv). This .csv wasn't used in training, and is just an example of the cleaning we did on the much larger dataset.
 
@@ -141,7 +142,9 @@ word_ngram = deque([self.START_TOKEN] * (self.word_n - 1))
 Now that we have our counts, we are able to calculate our transition and emissions probs to be used to calculate log-likelihood and to be used in song generation.
 
 ## Evaluating
-To evaluate, we used log likelihood, like in Milestone 2, even though we are aware it has a few flaws. Below is a heatmap 
+Our evaluation metric is log likelihood. As mentioned way earlier, we use log likelihood to evaluate how probable a sequence of lyrics are. Additionally, it is convienent for us since we need to use likelihood of our n-grams to generate our new tokens and sections.
+
+To calculate our log likelihood, since our model is an HMM, given a predetermined sequence of lyrics we use the forward algorithm to calculate $P(lyrics)$ or $P(token_1, token_2, ..., token_{|lyrics|})$
 
 <!!!> Insert heatmap
 
