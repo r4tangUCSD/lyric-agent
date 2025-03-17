@@ -249,6 +249,7 @@ Generated Lyrics:
 Section Sequence:
 `['Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Intro', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Verse', 'Verse', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']`
 
+\
 `tag='rap', word_n = 4, section_n = 2, starter=['hi', ',', 'you', 'are'], start_section="Verse"`
 
 Generated Lyrics:
@@ -257,6 +258,7 @@ Generated Lyrics:
 Section Sequence:
 `['Verse', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Hook', 'Verse', 'Verse', 'Chorus', 'Chorus', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Hook', 'Verse', 'Verse', 'Verse', 'Verse', 'Hook', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus', 'Chorus']`
 
+\
 `tag='country', word_n = 3, section_n = 2, starter=['dance','with'], start_section="Chorus"`
 
 Generated Lyrics:
